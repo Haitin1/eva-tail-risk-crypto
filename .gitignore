@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store
+.AppleDouble
+~$*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Claude
+.claude/
+
+# Temp / drafts
+*.rtf
+march.txt
+1.txt
+2.txt
+3.txt
+simic*.rtf
+simic*.txt
+EVA_slides/
+title_visual.png
+idio_comparison.png
+theta_comparison.png
+smart_btc.png
+v2_comparison.png
+vs_simicx.png
+backtest_results.png
+walkforward_folds.csv
+
+# Draft copies
+*copy*.py
+*copy*.pptx
+EVA_Abyssal_Navigation.pptx
+Extreme_Value_Alpha_Pitch_Deck_Refined.pptx
+
+# Papers / raw notes
+*.pdf
+*.txt
+2603.*
+
+# Lock (keep package.json, ignore lock)
+package-lock.json
