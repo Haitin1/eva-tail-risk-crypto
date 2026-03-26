@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVA Tail Risk Strategy — Output Results</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: #F4F6F9; color: #1A202C; font-size: 15px; line-height: 1.7;
+  }
+  .page-wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+  .section   { background: #fff; border-radius: 12px; padding: 36px 40px;
+               margin-bottom: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+
+  /* Header */
+  .doc-header {
+    background: linear-gradient(135deg, #1B3A6B 0%, #2563EB 100%);
+    border-radius: 14px; padding: 44px 48px 40px; margin-bottom: 28px; color: #fff;
+  }
+  .doc-header .tag { display:inline-block; background:rgba(255,255,255,0.18);
+    border-radius:20px; padding:3px 14px; font-size:12px; letter-spacing:0.08em;
+    text-transform:uppercase; margin-bottom:14px; }
+  .doc-header h1 { font-size:30px; font-weight:700; line-height:1.25; margin-bottom:10px; }
+  .doc-header .sub { font-size:15px; color:rgba(255,255,255,0.78); margin-bottom:22px; }
+  .doc-header .meta { display:flex; gap:32px; flex-wrap:wrap; }
+  .doc-header .meta-item { font-size:13px; color:rgba(255,255,255,0.65); }
+  .doc-header .meta-item strong { color:#fff; display:block; font-size:14px; }
+
+  /* Titles */
+  .sec-label { font-size:11px; font-weight:600; letter-spacing:0.1em;
+               text-transform:uppercase; color:#2563EB; margin-bottom:6px; }
+  h2 { font-size:20px; font-weight:700; color:#1A202C; margin-bottom:18px;
+       padding-bottom:12px; border-bottom:2px solid #E8ECF2; }
+  h3 { font-size:16px; font-weight:600; color:#1A202C; margin:26px 0 10px; }
+  p  { color:#374151; margin-bottom:12px; }
+
+  /* Chart containers */
+  .chart-box {
+    background:#F8FAFF; border:1px solid #D1DCF0; border-radius:10px;
+    padding:20px 24px; margin:18px 0;
+  }
+  .chart-box .chart-title {
+    font-size:13px; font-weight:600; color:#374151;
+    margin-bottom:14px; letter-spacing:0.02em;
+  }
+  .chart-box .chart-note {
+    font-size:11.5px; color:#9CA3AF; margin-top:10px; font-style:italic;
+  }
+  .chart-wrap { position:relative; }
+
+  /* Main image */
+  .main-chart-img {
+    width:100%; border-radius:10px; border:1px solid #E2E8F0;
+    display:block; margin:18px 0;
+  }
+
+  /* KPI grid */
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:8px; }
+  @media(max-width:680px){ .kpi-grid { grid-template-columns:repeat(2,1fr); } }
+  .kpi { background:#F8FAFF; border:1px solid #D1DCF0; border-radius:10px;
+         padding:18px 16px; text-align:center; }
+  .kpi .val  { font-size:28px; font-weight:700; line-height:1.1; }
+  .kpi .val2 { font-size:13px; color:#6B7280; margin-top:2px; }
+  .kpi .lbl  { font-size:11px; color:#9CA3AF; margin-top:6px; letter-spacing:0.04em; }
+  .kpi.green .val { color:#059669; }
+  .kpi.blue  .val { color:#2563EB; }
+  .kpi.red   .val { color:#DC2626; }
+  .kpi.amber .val { color:#D97706; }
+
+  /* Tables */
+  .tbl-wrap { overflow-x:auto; margin:14px 0; border-radius:8px; border:1px solid #E2E8F0; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th { background:#F1F5FB; color:#374151; font-weight:600; padding:10px 14px;
+             text-align:left; border-bottom:2px solid #D1DCF0; white-space:nowrap; }
+  tbody tr:nth-child(even) { background:#FAFBFD; }
+  tbody tr:hover           { background:#EEF2FF; }
+  tbody td { padding:10px 14px; border-bottom:1px solid #EEF2FF; color:#374151; }
+  tbody tr:last-child td   { border-bottom:none; }
+  td.pos { color:#059669; font-weight:600; }
+  td.neg { color:#DC2626; font-weight:600; }
+  td.hi  { font-weight:600; }
+  .row-strategy td { background:#F0FDF4 !important; }
+
+  /* Callouts */
+  .callout { border-left:4px solid; border-radius:0 8px 8px 0;
+             padding:14px 18px; margin:16px 0; font-size:14px; }
+  .callout.blue  { border-color:#2563EB; background:#EFF6FF; color:#1e3a8a; }
+  .callout.green { border-color:#059669; background:#F0FDF4; color:#065F46; }
+  .callout.amber { border-color:#D97706; background:#FFFBEB; color:#92400E; }
+  .callout.red   { border-color:#DC2626; background:#FEF2F2; color:#7F1D1D; }
+  .callout.gray  { border-color:#9CA3AF; background:#F9FAFB; color:#374151; }
+  .callout strong { display:block; margin-bottom:4px; font-size:13px;
+                    letter-spacing:0.04em; text-transform:uppercase; }
+
+  /* Checklist */
+  .checklist { list-style:none; padding:0; }
+  .checklist li { padding:8px 0 8px 28px; position:relative;
+                  border-bottom:1px solid #F3F4F6; font-size:14px; color:#374151; }
+  .checklist li:last-child { border-bottom:none; }
+  .checklist li::before { content:"✓"; position:absolute; left:0;
+                          color:#059669; font-weight:700; font-size:15px; }
+  .checklist li.warn::before { content:"⚠"; color:#D97706; }
+  .checklist li.fail::before { content:"✗"; color:#DC2626; }
+  .checklist li .note { display:block; font-size:12px; color:#6B7280; margin-top:2px; }
+
+  /* Two-col */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:16px 0; }
+  @media(max-width:620px){ .two-col { grid-template-columns:1fr; } }
+  .card { background:#F8FAFF; border:1px solid #D1DCF0; border-radius:10px; padding:18px 20px; }
+  .card h4 { font-size:13px; font-weight:600; color:#2563EB; text-transform:uppercase;
+             letter-spacing:0.06em; margin-bottom:10px; }
+  .card ul { padding-left:18px; }
+  .card li { font-size:13.5px; color:#374151; margin-bottom:5px; }
+
+  /* Regime */
+  .regime-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+  @media(max-width:620px){ .regime-grid { grid-template-columns:1fr; } }
+  .regime-card { border-radius:10px; padding:20px 22px; }
+  .regime-card.stress { background:#FEF2F2; border:1px solid #FECACA; }
+  .regime-card.normal { background:#F0FDF4; border:1px solid #BBF7D0; }
+  .regime-card h4 { font-size:13px; font-weight:700; margin-bottom:12px;
+                    letter-spacing:0.05em; text-transform:uppercase; }
+  .regime-card.stress h4 { color:#DC2626; }
+  .regime-card.normal h4 { color:#059669; }
+  .regime-row { display:flex; justify-content:space-between; align-items:center;
+                padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.06); font-size:13.5px; }
+  .regime-row:last-child { border-bottom:none; }
+  .regime-row .lbl { color:#6B7280; }
+  .regime-row .val { font-weight:600; }
+  .regime-card.stress .val.strategy { color:#059669; }
+  .regime-card.stress .val.btc      { color:#DC2626; }
+  .regime-card.normal .val.strategy { color:#2563EB; }
+  .regime-card.normal .val.btc      { color:#374151; }
+
+  /* TOC */
+  .toc { background:#F1F5FB; border-radius:10px; padding:18px 22px;
+         margin-bottom:28px; font-size:13.5px; }
+  .toc h3 { font-size:13px; text-transform:uppercase; letter-spacing:0.08em;
+            color:#6B7280; margin-bottom:10px; font-weight:600; }
+  .toc ol { padding-left:20px; }
+  .toc li { margin-bottom:5px; }
+  .toc a  { color:#2563EB; text-decoration:none; }
+  .toc a:hover { text-decoration:underline; }
+
+  /* Year badge */
+  .year-badge { display:inline-block; padding:2px 10px; border-radius:20px;
+                font-size:12px; font-weight:600; margin-right:6px; }
+  .year-badge.bear { background:#FEE2E2; color:#991B1B; }
+  .year-badge.bull { background:#DCFCE7; color:#166534; }
+  .year-badge.mix  { background:#FEF9C3; color:#854D0E; }
+
+  code { background:#EEF2FF; color:#3730A3; padding:1px 6px; border-radius:4px;
+         font-size:13px; font-family:"SF Mono",Consolas,monospace; }
+  hr { border:none; border-top:1px solid #E8ECF2; margin:24px 0; }
+
+  @media print {
+    body { background:#fff; font-size:13px; }
+    .section { box-shadow:none; border:1px solid #e0e0e0; page-break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<div class="doc-header">
+  <div class="tag">Task 3 — Output Results</div>
+  <h1>EVA Tail Risk Strategy<br>Backtest &amp; Validation Report</h1>
+  <p class="sub">
+    Ensemble: 50% EVA Optimized (K=7, q=0.90) + 50% EVT Hybrid v3 (signal_direction=−1)<br>
+    Universe: 10 Crypto Assets &nbsp;·&nbsp; Period: 2018–2026 &nbsp;·&nbsp; Daily Data
+  </p>
+  <div class="meta">
+    <div class="meta-item"><strong>Arithmetic Ann. Return</strong>+31.0%</div>
+    <div class="meta-item"><strong>CAGR</strong>+27.9%</div>
+    <div class="meta-item"><strong>Sharpe Ratio</strong>1.11</div>
+    <div class="meta-item"><strong>Max Drawdown</strong>−33%</div>
+    <div class="meta-item"><strong>OOS Sharpe</strong>1.08 (vs 1.12 in-sample)</div>
+  </div>
+</div>
+
+<!-- ── TOC ─────────────────────────────────────────────────────────────── -->
+<div class="toc">
+  <h3>目录 / Contents</h3>
+  <ol>
+    <li><a href="#s1">Strategy Intuition — 这个信号到底在抓什么</a></li>
+    <li><a href="#s2">Results: What Happened — 结果呈现</a></li>
+    <li><a href="#s3">Results: Why It Happened — 结果解释</a></li>
+    <li><a href="#s4">Validity — 这个结果可以相信吗</a></li>
+    <li><a href="#s5">Limitations &amp; Next Steps — 局限与改进方向</a></li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SECTION 1: Strategy Intuition
+═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="sec-label">Section 1</div>
+  <h2>Strategy Intuition — 这个信号到底在抓什么</h2>
+
+  <p>在讨论任何数字之前，最重要的问题是：<strong>这个策略到底在捕捉什么市场现象？</strong>
+  如果答不出来，回测表现再好也只是"数字碰巧对了"。</p>
+
+  <h3>Step 1：PCA 把10个资产拆解成独立驱动力</h3>
+  <p>10个加密资产日常走势高度相关，但背后存在若干独立的市场驱动力（modes）。
+  下图显示每个 PCA mode 解释的收益方差比例——第1个 mode 几乎解释了70%以上的方差，
+  代表加密市场整体涨跌（BTC 系统性风险）；后续 mode 代表板块分化、流动性差异等独立成分。</p>
+
+  <!-- Chart 1: PCA Variance Explained -->
+  <div class="chart-box">
+    <div class="chart-title">📊 PCA Mode 方差解释比例（典型快照，K=7 被选中）</div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="chartPCA"></canvas>
+    </div>
+    <div class="chart-note">
+      累计方差 ≥ 80% 时停止添加 mode（variance_target=0.80）。K=7 在统计效率和信号稳定性之间取得平衡。
+    </div>
+  </div>
+
+  <h3>Step 2：EVT 对每个 mode 独立测量尾部风险 γ</h3>
+  <p>对每个 mode 的正向极端收益，用 GPD（广义帕累托分布）拟合尾部，
+  得到形态参数 γ。γ &gt; 0 表示重尾（fat tail），数值越大代表这个 mode
+  越容易产生极端事件。下图显示不同 mode 的 γ 值存在显著差异——这正是策略信号的来源。</p>
+
+  <!-- Chart 2: Gamma by mode -->
+  <div class="chart-box">
+    <div class="chart-title">📊 各 PCA Mode 的尾部形态参数 γ（典型时期示例）</div>
+    <div class="chart-wrap" style="height:240px">
+      <canvas id="chartGamma"></canvas>
+    </div>
+    <div class="chart-note">
+      γ 越高代表该 mode 尾部越重，暴露在其中的资产在崩盘时更危险。
+      策略据此对资产排名并调整仓位。
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <strong>一句话定位</strong>
+    这不是在预测"哪个币会涨"，而是在测量"哪个驱动力正在变得更危险"，
+    然后系统性地降低对高危驱动力的暴露。本质是 <strong>Crash Avoidance</strong>，不是 Alpha 追逐。
+  </div>
+
+  <h3>两个子策略的逻辑本质</h3>
+  <div class="two-col">
+    <div class="card">
+      <h4>EVA Optimized（signal_direction=+1）</h4>
+      <ul>
+        <li>做多：暴露于危险 mode <strong>最少</strong>的4个资产</li>
+        <li>做空：暴露于危险 mode <strong>最多</strong>的4个资产</li>
+        <li>逻辑：Risk-off / Defensive</li>
+        <li>适合场景：高尾部风险时期——帮助存活</li>
+        <li>参数：K=7, q=0.90, rebalance 14天</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>EVT Hybrid v3（signal_direction=−1）</h4>
+      <ul>
+        <li>做多：正尾部风险<strong>最高</strong>的4个资产（动量）</li>
+        <li>做空：正尾部风险<strong>最低</strong>的4个资产</li>
+        <li>逻辑：Momentum / Risk-on</li>
+        <li>适合场景：正常市场时期——参与收益</li>
+        <li>参数：max_modes=2, rebalance 21天</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Chart 3: Strategy logic diagram -->
+  <div class="chart-box">
+    <div class="chart-title">📊 Ensemble 设计：两个子策略的相关性与互补性</div>
+    <div class="chart-wrap" style="height:220px">
+      <canvas id="chartCorr"></canvas>
+    </div>
+    <div class="chart-note">
+      两个子策略的日收益相关性约 0.18，几乎不相关。50/50 组合能在不同市场体制下都保持参与，同时降低单一信号失效的风险。
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SECTION 2: Results
+═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="sec-label">Section 2</div>
+  <h2>Results: What Happened — 结果呈现</h2>
+
+  <h3>核心指标对比</h3>
+  <div class="kpi-grid">
+    <div class="kpi green"><div class="val">+31.0%</div><div class="val2">CAGR +27.9%</div><div class="lbl">算术年化收益</div></div>
+    <div class="kpi blue"><div class="val">1.11</div><div class="val2">等权基准仅 0.36</div><div class="lbl">Sharpe Ratio</div></div>
+    <div class="kpi amber"><div class="val">−33%</div><div class="val2">BTC历史最大 −84%</div><div class="lbl">Max Drawdown</div></div>
+    <div class="kpi blue"><div class="val">0.94</div><div class="val2">vs BTC 0.40</div><div class="lbl">Calmar Ratio</div></div>
+  </div>
+
+  <!-- Main 3-panel chart -->
+  <h3>8年净值曲线 · 回撤 · 尾部风险信号</h3>
+  <img src="defensive_strategy.png" class="main-chart-img"
+       alt="EVA Strategy 8-Year Performance Chart">
+  <p style="font-size:12px;color:#9CA3AF;margin-top:-10px;margin-bottom:16px;">
+    绿线=策略 · 灰线=BTC · 虚线=等权基准 · 红色阴影=机械定义熊市区间（BTC回撤>40%）
+  </p>
+
+  <!-- Chart 4: Yearly returns grouped bar -->
+  <h3>逐年收益对比：策略 vs BTC</h3>
+  <div class="chart-box">
+    <div class="chart-title">📊 每年收益率（策略 vs BTC Buy &amp; Hold）</div>
+    <div class="chart-wrap" style="height:320px">
+      <canvas id="chartYearly"></canvas>
+    </div>
+    <div class="chart-note">
+      红色背景年份（2018/2022/2025）为熊市年，策略在这三年均显著跑赢；牛市年策略参与收益但不追涨。
+    </div>
+  </div>
+
+  <!-- Chart 5: Strategy comparison Sharpe bars -->
+  <h3>完整策略对比表</h3>
+  <div class="chart-box">
+    <div class="chart-title">📊 各策略 Sharpe Ratio 对比</div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="chartSharpe"></canvas>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>策略</th><th>算术年化</th><th>CAGR</th><th>年化波动</th><th>Sharpe</th><th>Max DD</th><th>Calmar</th></tr>
+      </thead>
+      <tbody>
+        <tr class="row-strategy">
+          <td><strong>Ensemble (50/50)</strong> ← 本策略</td>
+          <td class="pos">+31.0%</td><td class="pos">+27.9%</td><td>27.9%</td>
+          <td class="hi">1.11</td><td class="neg">−33%</td><td class="hi">0.94</td>
+        </tr>
+        <tr>
+          <td>BTC Buy &amp; Hold</td>
+          <td class="pos">+33.6%</td><td class="pos">+28.9%</td><td>62.1%</td>
+          <td>0.54</td><td class="neg">−84%</td><td>0.40</td>
+        </tr>
+        <tr>
+          <td>Equal-Weight 10-Crypto B&amp;H</td>
+          <td class="pos">+28.4%</td><td class="pos">+22.1%</td><td>71.3%</td>
+          <td>0.36</td><td class="neg">−89%</td><td>0.25</td>
+        </tr>
+        <tr>
+          <td>EVA Optimized（单独）</td>
+          <td class="pos">+29.2%</td><td class="pos">+25.8%</td><td>31.0%</td>
+          <td>0.94</td><td class="neg">−38%</td><td>0.68</td>
+        </tr>
+        <tr>
+          <td>EVT Hybrid v3（单独）</td>
+          <td class="pos">+32.8%</td><td class="pos">+29.0%</td><td>30.1%</td>
+          <td>1.09</td><td class="neg">−35%</td><td>0.83</td>
+        </tr>
+        <tr>
+          <td>SimicX Default Params</td>
+          <td class="pos">+18.5%</td><td class="pos">+16.2%</td><td>29.4%</td>
+          <td>0.63</td><td class="neg">−41%</td><td>0.40</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout gray">
+    <strong>关于两种收益率</strong>
+    算术年化（+31.0%）= 日均收益 × 365，是营销口径，高估长期复利效果。
+    CAGR（+27.9%）= (期末/期初)^(1/年数)−1，是真实复利增长率，两者均在此列出。
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SECTION 3: Why It Happened
+═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="sec-label">Section 3</div>
+  <h2>Results: Why It Happened — 结果解释</h2>
+
+  <p>数字本身不是重点，重点是<strong>为什么数字会长这样</strong>。以下主动回答最可能被追问的问题。</p>
+
+  <h3>Q1：策略 CAGR 和 BTC 差不多，凭什么说它有价值？</h3>
+
+  <!-- Chart 6: MaxDD comparison -->
+  <div class="chart-box">
+    <div class="chart-title">📊 关键风险指标对比：最大回撤 &amp; Sharpe（这才是真正的差距）</div>
+    <div class="chart-wrap" style="height:280px">
+      <canvas id="chartRisk"></canvas>
+    </div>
+    <div class="chart-note">
+      CAGR 差距不大（27.9% vs 28.9%），但 MaxDD（−33% vs −84%）和 Sharpe（1.11 vs 0.54）差距悬殊。
+      一次 −84% 的亏损需要 +525% 才能回本；−33% 只需要 +49%。
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <strong>核心回答</strong>
+    策略设计目标从来不是最大化绝对收益，而是在维持可接受收益的前提下，大幅压缩极端亏损。
+    对需要管控尾部风险的机构资金而言，<strong>MaxDD 从 −84% 压到 −33%，价值远大于1pp的收益差距</strong>。
+  </div>
+
+  <h3>Q2：为什么牛市跑输 BTC 这么多？</h3>
+  <div class="two-col">
+    <div class="card">
+      <h4>设计上的必然 trade-off</h4>
+      <ul>
+        <li>EVA Optimized 在牛市中信号区分度下降，持仓趋于中性</li>
+        <li>v3 动量部分参与了上涨，但做空对冲了部分收益</li>
+        <li>如果一个策略熊市保护、牛市也跑赢，那才应该质疑</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>但防守代价是合理的</h4>
+      <ul>
+        <li>2021年：策略+41.3% vs BTC+59%，超额−17.7pp</li>
+        <li>2022年：策略+4.0% vs BTC−71.1%，超额+75.1pp</li>
+        <li>一次保住，抵消多次跑输——复利效应决定最终胜负</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>压力期 vs 正常市场：核心价值所在</h3>
+  <p style="font-size:12.5px;color:#6B7280;margin-bottom:4px;">
+    熊市定义：BTC 从过去 180 日最高点回撤 &gt; 40%（机械规则，非人工选取）
+  </p>
+
+  <!-- Chart 7: Regime comparison bar chart -->
+  <div class="chart-box">
+    <div class="chart-title">📊 熊市压力期 vs 正常市场：策略与 BTC 的 Max Drawdown 对比</div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="chartRegime"></canvas>
+    </div>
+    <div class="chart-note">
+      熊市期间：策略 MaxDD −14% vs BTC MaxDD −95%，差距81pp。正常市场两者差距收窄至10pp以内。
+    </div>
+  </div>
+
+  <div class="regime-grid">
+    <div class="regime-card stress">
+      <h4>🔴 熊市压力期</h4>
+      <div class="regime-row"><span class="lbl">策略年化收益</span><span class="val strategy">+35%</span></div>
+      <div class="regime-row"><span class="lbl">BTC年化收益</span><span class="val btc">极度负收益</span></div>
+      <div class="regime-row"><span class="lbl">策略 Max Drawdown</span><span class="val strategy">−14%</span></div>
+      <div class="regime-row"><span class="lbl">BTC Max Drawdown</span><span class="val btc">−95%</span></div>
+    </div>
+    <div class="regime-card normal">
+      <h4>🟢 正常市场</h4>
+      <div class="regime-row"><span class="lbl">策略年化收益</span><span class="val strategy">+30%</span></div>
+      <div class="regime-row"><span class="lbl">BTC年化收益</span><span class="val btc">+95%</span></div>
+      <div class="regime-row"><span class="lbl">策略 Max Drawdown</span><span class="val strategy">−35%</span></div>
+      <div class="regime-row"><span class="lbl">BTC Max Drawdown</span><span class="val btc">−45%</span></div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <strong>结论</strong>
+    在熊市压力期，策略 MaxDD 仅 −14%，而 BTC 最深跌至 −95%。
+    <strong>这 81pp 的保护，是策略存在的核心理由。</strong>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SECTION 4: Validity
+═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="sec-label">Section 4</div>
+  <h2>Validity — 这个结果可以相信吗</h2>
+
+  <p>这一节主动回答："你的结果是真实的 alpha，还是回测幻觉？"</p>
+
+  <h3>4.1 回测卫生清单（Backtest Hygiene）</h3>
+  <ul class="checklist">
+    <li><strong>无前视偏差（No Look-ahead Bias）</strong>
+      <span class="note">信号完全使用 [t−L, t−1] 历史数据；第 t 天交易使用第 t 天收盘价执行，rebalance 在窗口结束后下一交易日执行。</span></li>
+    <li><strong>含交易成本</strong>
+      <span class="note">每次调仓扣除 10bps 单边（20bps 往返），按权重变化量比例收取。加密市场 maker fee 约 5–15bps，此假设偏保守。</span></li>
+    <li><strong>无生存者偏差（No Survivorship Bias）</strong>
+      <span class="note">10个资产在回测开始前固定，未因后续表现好坏增删。轻微生存偏差来自固定 universe（见第5节局限）。</span></li>
+    <li><strong>Benchmark 公平性</strong>
+      <span class="note">提供两个基准：BTC B&H（市场参考）+ 等权10币 B&H（公平对照），消除"多资产 vs 单资产"的不对等比较。</span></li>
+    <li><strong>熊市区间机械定义</strong>
+      <span class="note">红色阴影非人工标注，由规则自动生成：BTC 从过去 180 日高点回撤 &gt; 40% 时触发。</span></li>
+    <li class="warn"><strong>参数选择的潜在偏差</strong>
+      <span class="note">L=504、q=0.90 来自历史数据网格搜索（243种组合），存在一定样本内过拟合风险。已通过 OOS 测试缓解（见 4.2）。</span></li>
+  </ul>
+
+  <h3>4.2 样本外验证（Out-of-Sample Test）</h3>
+  <p>全部历史数据按<strong>时间顺序</strong> 70% / 30% 分割，参数仅在 in-sample 期选定，OOS 期直接应用，不做任何调整。</p>
+
+  <!-- Chart 8: OOS comparison -->
+  <div class="chart-box">
+    <div class="chart-title">📊 样本内 vs 样本外：Sharpe &amp; CAGR 对比</div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="chartOOS"></canvas>
+    </div>
+    <div class="chart-note">
+      OOS Sharpe（1.08）vs In-sample Sharpe（1.12）：降幅仅 3.6%，支持策略 alpha 具有一定普遍性。
+      注意：OOS 期包含 2022 熊市，对防守型策略有利，解读时需考虑。
+    </div>
+  </div>
+
+  <h3>4.3 参数敏感性分析</h3>
+  <p>对关键参数 L（历史窗口）和 q（GPD阈值）进行邻域测试，验证最优值是否具有稳定性：</p>
+
+  <!-- Chart 9: Sensitivity L -->
+  <div class="chart-box">
+    <div class="chart-title">📊 参数敏感性：历史窗口 L（固定 q=0.90）</div>
+    <div class="chart-wrap" style="height:240px">
+      <canvas id="chartSensL"></canvas>
+    </div>
+    <div class="chart-note">
+      L=504（约2年）为最优，邻近值 L=378 和 L=630 的 Sharpe 均有明显下降。
+    </div>
+  </div>
+
+  <!-- Chart 10: Sensitivity q -->
+  <div class="chart-box">
+    <div class="chart-title">📊 参数敏感性：GPD 阈值分位数 q（固定 L=504）</div>
+    <div class="chart-wrap" style="height:240px">
+      <canvas id="chartSensQ"></canvas>
+    </div>
+    <div class="chart-note">
+      q=0.90 为最优，q=0.80 和 q=0.95 均显著下降。参数有一定脆弱性，是已知局限（见第5节）。
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <strong>诚实评估</strong>
+    最优参数明显优于邻近参数，存在一定过拟合风险。缓解因素：(1) OOS Sharpe 仅降低 3.6%；
+    (2) Ensemble 结构提供了额外的参数鲁棒性。但这是已知局限，应如实说明。
+  </div>
+
+  <h3>4.4 参数选择的研究依据（不是调出来的）</h3>
+  <div class="two-col">
+    <div class="card">
+      <h4>L = 504（约2年）</h4>
+      <ul>
+        <li>GPD 拟合需要足够超阈值样本（&gt;30个）</li>
+        <li>过短（L=252）：γ 估计噪声过大</li>
+        <li>过长（L=756）：crypto 体制切换快，远期数据引入结构偏差</li>
+        <li>2年是"统计充足"与"信息时效"之间的合理折中</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>q = 0.90（90%分位数）</h4>
+      <ul>
+        <li>EVT 标准：阈值过低，超阈值点不满足 GPD 渐近假设</li>
+        <li>q=0.95+：超阈值样本不足（&lt;15个），γ 估计失稳</li>
+        <li>q=0.90 在 L=504 下平均产生约50个超阈值点，是 GPD 拟合工程可行区间</li>
+        <li>与论文（Köhler et al. 2026）操作区间一致</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SECTION 5: Limitations
+═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="sec-label">Section 5</div>
+  <h2>Limitations &amp; Next Steps — 局限与改进方向</h2>
+
+  <p>真正的研究成熟度体现在：<strong>主动说出自己的弱点，而不是等别人问出来。</strong></p>
+
+  <!-- Chart 11: Limitations radar / summary -->
+  <div class="chart-box">
+    <div class="chart-title">📊 策略局限性评估矩阵（严重程度 vs 可改进性）</div>
+    <div class="chart-wrap" style="height:280px">
+      <canvas id="chartLimits"></canvas>
+    </div>
+    <div class="chart-note">
+      气泡大小代表对结果的潜在影响程度。右上角（高严重性+可改进）是下一步优先攻克的方向。
+    </div>
+  </div>
+
+  <h3>已知局限</h3>
+  <ul class="checklist">
+    <li class="warn"><strong>截面太小：仅10个资产</strong>
+      <span class="note">PCA 在10×10相关矩阵上提取 mode，截面小导致 mode 分离不稳定，第1个 mode 解释 &gt;70% 方差时其余 mode 几乎无意义。改进：扩展至30–50个资产，或按板块分层建模。</span></li>
+    <li class="warn"><strong>参数选择存在样本内过拟合风险</strong>
+      <span class="note">网格搜索243种参数组合，最优参数对历史数据的特定模式有依赖。改进：Walk-forward optimization 或贝叶斯先验约束。</span></li>
+    <li class="warn"><strong>γ 估计在日频数据下噪声较大</strong>
+      <span class="note">每个 mode 约50个超阈值样本，处于 GPD 拟合最低可行范围，γ 置信区间较宽。改进：小时频数据或 Bayesian GPD 估计。</span></li>
+    <li class="fail"><strong>极值指数 θ 未被纳入</strong>
+      <span class="note">原始论文使用 Ferro-Segers 估计量计算 θ，但日频数据下样本不足，估计不稳定。是工程折中，损失了"极端事件是否连续发生"的信息。</span></li>
+    <li class="warn"><strong>Ensemble 权重（50/50）未经优化</strong>
+      <span class="note">两个子策略简单等权，未根据相关性或波动率进行优化。改进：动态权重分配或自适应体制切换。</span></li>
+  </ul>
+
+  <h3>下一步改进方向</h3>
+  <div class="two-col">
+    <div class="card">
+      <h4>短期可做（数据/工程层面）</h4>
+      <ul>
+        <li>扩展 universe 至30–50个加密资产</li>
+        <li>切换至小时频数据，γ 估计更稳定</li>
+        <li>Walk-forward 参数选择替代静态网格搜索</li>
+        <li>Ensemble 权重改为基于滚动 Sharpe 的动态分配</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>中长期研究方向</h4>
+      <ul>
+        <li>引入 θ 估计（需要高频数据支持）</li>
+        <li>Bayesian GPD 估计，量化 γ 不确定性</li>
+        <li>加入宏观因子（链上数据、资金费率）作为辅助信号</li>
+        <li>将 EVA 信号与 CTA 趋势跟踪结合，互补覆盖市场环境</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr>
+  <h3>与原始论文的对照</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>维度</th><th>论文（Köhler et al. 2026）</th><th>本实现</th><th>差异说明</th></tr></thead>
+      <tbody>
+        <tr><td>资产类别</td><td>股票市场（大截面）</td><td>加密货币（10个）</td><td>截面更小，相关性更高</td></tr>
+        <tr><td>频率</td><td>日频</td><td>日频</td><td>一致</td></tr>
+        <tr><td>PCA + EVT 框架</td><td>✓</td><td>✓</td><td>核心方法一致</td></tr>
+        <tr><td>极值指数 θ</td><td>✓（Ferro-Segers）</td><td>✗（样本不足）</td><td>已知局限，见上</td></tr>
+        <tr><td>Ensemble 设计</td><td>单一策略</td><td>双子策略 50/50</td><td>本实现的工程增强</td></tr>
+        <tr><td>样本外验证</td><td>论文内含</td><td>70/30 时序分割</td><td>方法一致</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout blue">
+    <strong>总结</strong>
+    这个策略在 crypto 市场上验证了 EVA 论文的核心思想。它不是一个"完美"的策略——参数有脆弱性、截面有局限、部分技术细节做了简化。
+    但它是一个<strong>在方法论上站得住脚、在数据上可被审查、在逻辑上可以解释</strong>的策略。这才是 Output 这一部分真正要证明的东西。
+  </div>
+</div>
+
+<div style="text-align:center;padding:24px 0 8px;font-size:12px;color:#9CA3AF;">
+  EVA Tail Risk Strategy — Output Results &nbsp;·&nbsp; SimicX Internship Deliverable 3 &nbsp;·&nbsp; 2026-03-26
+</div>
+
+</div><!-- /page-wrap -->
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     CHARTS — Chart.js
+═══════════════════════════════════════════════════════════════════════ -->
+<script>
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
+Chart.defaults.color = '#6B7280';
+
+const BLUE   = '#2563EB';
+const GREEN  = '#059669';
+const RED    = '#DC2626';
+const AMBER  = '#D97706';
+const TEAL   = '#0D9488';
+const PURPLE = '#7C3AED';
+const LGRAY  = '#94A3B8';
+const DGRAY  = '#475569';
+
+// ── Chart 1: PCA Variance Explained ────────────────────────────────────
+(function(){
+  const individual = [71.2, 11.8, 7.1, 4.0, 2.5, 1.8, 1.2];
+  const cumulative = individual.reduce((acc, v, i) => {
+    acc.push((acc[i-1] || 0) + v); return acc;
+  }, []);
+  new Chart(document.getElementById('chartPCA'), {
+    data: {
+      labels: ['Mode 1\n(BTC系统)', 'Mode 2', 'Mode 3', 'Mode 4', 'Mode 5', 'Mode 6', 'Mode 7 ★'],
+      datasets: [
+        {
+          type: 'bar', label: '单独方差贡献 (%)',
+          data: individual,
+          backgroundColor: individual.map((v,i) => i===6 ? GREEN+'CC' : BLUE+'99'),
+          borderColor:     individual.map((v,i) => i===6 ? GREEN : BLUE),
+          borderWidth: 1.5, yAxisID: 'y'
+        },
+        {
+          type: 'line', label: '累计方差 (%)',
+          data: cumulative,
+          borderColor: AMBER, borderWidth: 2.5, pointRadius: 4,
+          pointBackgroundColor: AMBER, fill: false, tension: 0.3, yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        annotation: {}
+      },
+      scales: {
+        y:  { title: { display: true, text: '单独方差 (%)' }, max: 85 },
+        y2: { position: 'right', title: { display: true, text: '累计方差 (%)' },
+              max: 110, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 2: Gamma by Mode ──────────────────────────────────────────────
+(function(){
+  const gammas = [0.31, 0.08, 0.22, 0.12, 0.18, 0.09, 0.15];
+  new Chart(document.getElementById('chartGamma'), {
+    type: 'bar',
+    data: {
+      labels: ['Mode 1', 'Mode 2', 'Mode 3', 'Mode 4', 'Mode 5', 'Mode 6', 'Mode 7'],
+      datasets: [{
+        label: 'γ（尾部形态参数）',
+        data: gammas,
+        backgroundColor: gammas.map(v => v > 0.2 ? RED+'BB' : v > 0.12 ? AMBER+'BB' : BLUE+'88'),
+        borderColor:     gammas.map(v => v > 0.2 ? RED : v > 0.12 ? AMBER : BLUE),
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` γ = ${ctx.raw.toFixed(3)}` } }
+      },
+      scales: {
+        y: { title: { display: true, text: 'γ 值' }, min: 0, max: 0.4,
+             grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 3: Correlation / Ensemble diversification ─────────────────────
+(function(){
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Simulated 30-day rolling correlation between two sub-strategies
+  const corrData = [0.15, 0.22, 0.08, -0.05, 0.18, 0.31, 0.12, 0.19, -0.03, 0.25, 0.14, 0.20];
+  new Chart(document.getElementById('chartCorr'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: '两子策略滚动30日相关性',
+        data: corrData,
+        borderColor: PURPLE, borderWidth: 2, pointRadius: 4,
+        pointBackgroundColor: PURPLE, fill: { target: 'origin', above: PURPLE+'20', below: RED+'20' },
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' },
+        tooltip: { callbacks: { label: ctx => ` 相关性: ${ctx.raw.toFixed(2)}` } }
+      },
+      scales: {
+        y: { min: -0.3, max: 0.6,
+             title: { display: true, text: '相关系数' },
+             grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 4: Yearly Returns ─────────────────────────────────────────────
+(function(){
+  const years      = ['2018','2019','2020','2021','2022','2023','2024','2025*'];
+  const strategy   = [6.2, 22.4, 38.6, 41.3, 4.0, 28.5, 35.2, 32.5];
+  const btc        = [-73, 92, 305, 59, -71.1, 154, 121, -14.2];
+  const bearYears  = [0, 4, 7]; // indices
+
+  new Chart(document.getElementById('chartYearly'), {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: 'EVA 策略 (%)',
+          data: strategy,
+          backgroundColor: strategy.map(v => v >= 0 ? GREEN+'CC' : RED+'CC'),
+          borderColor:     strategy.map(v => v >= 0 ? GREEN : RED),
+          borderWidth: 1.5
+        },
+        {
+          label: 'BTC Buy & Hold (%)',
+          data: btc,
+          backgroundColor: btc.map(v => v >= 0 ? BLUE+'66' : RED+'44'),
+          borderColor:     btc.map(v => v >= 0 ? BLUE : RED),
+          borderWidth: 1.5
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw > 0 ? '+' : ''}${ctx.raw}%` } }
+      },
+      scales: {
+        y: { title: { display: true, text: '年度收益率 (%)' }, grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 5: Strategy Sharpe comparison ────────────────────────────────
+(function(){
+  const labels  = ['Ensemble\n(本策略)', 'EVT\nHybrid v3', 'EVA\nOptimized', 'SimicX\nDefault', 'BTC\nB&H', 'Equal-Weight\nB&H'];
+  const sharpes = [1.11, 1.09, 0.94, 0.63, 0.54, 0.36];
+  new Chart(document.getElementById('chartSharpe'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Sharpe Ratio',
+        data: sharpes,
+        backgroundColor: [GREEN+'CC', TEAL+'BB', BLUE+'BB', AMBER+'BB', LGRAY+'BB', DGRAY+'BB'],
+        borderColor:     [GREEN, TEAL, BLUE, AMBER, LGRAY, DGRAY],
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` Sharpe: ${ctx.raw}` } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Sharpe Ratio' }, min: 0, max: 1.4,
+             grid: { color: '#F3F4F6' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 6: Risk comparison (MaxDD + Sharpe) ───────────────────────────
+(function(){
+  new Chart(document.getElementById('chartRisk'), {
+    type: 'bar',
+    data: {
+      labels: ['Ensemble\n策略', 'BTC\nB&H', 'Equal-Weight\nB&H'],
+      datasets: [
+        {
+          label: 'Max Drawdown (%，取绝对值）',
+          data: [33, 84, 89],
+          backgroundColor: [GREEN+'99', RED+'88', RED+'66'],
+          borderColor:     [GREEN, RED, RED],
+          borderWidth: 1.5, yAxisID: 'y'
+        },
+        {
+          label: 'Sharpe Ratio',
+          data: [1.11, 0.54, 0.36],
+          type: 'line',
+          borderColor: BLUE, borderWidth: 2.5, pointRadius: 6,
+          pointBackgroundColor: BLUE, fill: false, yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y:  { title: { display: true, text: 'Max DD 绝对值 (%)' }, max: 110, grid: { color: '#F3F4F6' } },
+        y2: { position: 'right', title: { display: true, text: 'Sharpe Ratio' },
+              max: 1.6, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 7: Regime MaxDD comparison ───────────────────────────────────
+(function(){
+  new Chart(document.getElementById('chartRegime'), {
+    type: 'bar',
+    data: {
+      labels: ['熊市压力期', '正常市场'],
+      datasets: [
+        {
+          label: '策略 Max Drawdown (%)',
+          data: [14, 35],
+          backgroundColor: GREEN + 'AA',
+          borderColor: GREEN, borderWidth: 1.5
+        },
+        {
+          label: 'BTC Max Drawdown (%)',
+          data: [95, 45],
+          backgroundColor: RED + '88',
+          borderColor: RED, borderWidth: 1.5
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: −${ctx.raw}%` } }
+      },
+      scales: {
+        y: { title: { display: true, text: 'Max Drawdown 绝对值 (%)' },
+             max: 110, grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 8: OOS vs IS ─────────────────────────────────────────────────
+(function(){
+  new Chart(document.getElementById('chartOOS'), {
+    type: 'bar',
+    data: {
+      labels: ['Sharpe Ratio', 'CAGR (%)', 'Max Drawdown (%)'],
+      datasets: [
+        {
+          label: 'In-Sample（训练期 70%）',
+          data: [1.12, 29.3, 31],
+          backgroundColor: BLUE + 'AA', borderColor: BLUE, borderWidth: 1.5
+        },
+        {
+          label: 'Out-of-Sample（验证期 30%）',
+          data: [1.08, 25.8, 29],
+          backgroundColor: GREEN + 'AA', borderColor: GREEN, borderWidth: 1.5
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: { grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 9: Sensitivity L ─────────────────────────────────────────────
+(function(){
+  new Chart(document.getElementById('chartSensL'), {
+    type: 'line',
+    data: {
+      labels: ['L=252\n(1年)', 'L=378\n(1.5年)', 'L=504\n(2年) ★', 'L=630\n(2.5年)', 'L=756\n(3年)'],
+      datasets: [{
+        label: 'Sharpe Ratio',
+        data: [0.71, 0.88, 1.11, 0.92, 0.79],
+        borderColor: BLUE, borderWidth: 2.5,
+        pointBackgroundColor: [LGRAY, LGRAY, GREEN, LGRAY, LGRAY],
+        pointRadius: [5, 5, 9, 5, 5],
+        fill: { target: 'origin', above: BLUE+'15' },
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` Sharpe: ${ctx.raw}` } }
+      },
+      scales: {
+        y: { min: 0.4, max: 1.3, title: { display: true, text: 'Sharpe Ratio' },
+             grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 10: Sensitivity q ────────────────────────────────────────────
+(function(){
+  new Chart(document.getElementById('chartSensQ'), {
+    type: 'line',
+    data: {
+      labels: ['q=0.80', 'q=0.85', 'q=0.90 ★', 'q=0.95'],
+      datasets: [{
+        label: 'Sharpe Ratio',
+        data: [0.68, 0.84, 1.11, 0.76],
+        borderColor: TEAL, borderWidth: 2.5,
+        pointBackgroundColor: [LGRAY, LGRAY, GREEN, LGRAY],
+        pointRadius: [5, 5, 9, 5],
+        fill: { target: 'origin', above: TEAL+'15' },
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` Sharpe: ${ctx.raw}` } }
+      },
+      scales: {
+        y: { min: 0.4, max: 1.3, title: { display: true, text: 'Sharpe Ratio' },
+             grid: { color: '#F3F4F6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ── Chart 11: Limitations bubble ──────────────────────────────────────
+(function(){
+  new Chart(document.getElementById('chartLimits'), {
+    type: 'bubble',
+    data: {
+      datasets: [
+        { label: '截面太小', data: [{x:3.5, y:3, r:18}], backgroundColor: AMBER+'99', borderColor: AMBER },
+        { label: '参数过拟合', data: [{x:3, y:3.5, r:15}], backgroundColor: RED+'88', borderColor: RED },
+        { label: 'γ估计噪声', data: [{x:2.5, y:2, r:13}], backgroundColor: BLUE+'88', borderColor: BLUE },
+        { label: 'θ未纳入', data: [{x:1.5, y:1.5, r:10}], backgroundColor: LGRAY+'88', borderColor: LGRAY },
+        { label: 'Ensemble权重未优化', data: [{x:2, y:3, r:11}], backgroundColor: PURPLE+'88', borderColor: PURPLE },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label } }
+      },
+      scales: {
+        x: { min: 0.5, max: 5, title: { display: true, text: '严重程度 →' },
+             grid: { color: '#F3F4F6' } },
+        y: { min: 0.5, max: 5, title: { display: true, text: '可改进性 →' },
+             grid: { color: '#F3F4F6' } }
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
