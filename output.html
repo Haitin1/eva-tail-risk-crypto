@@ -202,7 +202,6 @@
     <li><a href="#s3">Results: Why It Happened — 结果解释</a></li>
     <li><a href="#s4">Validity — 这个结果可以相信吗</a></li>
     <li><a href="#s5">Limitations &amp; Next Steps — 局限与改进方向</a></li>
-    <li><a href="#s6">Defence Q&amp;A — 面试最可能被问到的8个问题</a></li>
   </ol>
 </div>
 
@@ -706,128 +705,6 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════
-     SECTION 6: Defence Q&A
-═══════════════════════════════════════════════════════════════════════ -->
-<div class="section" id="s6">
-  <div class="sec-label">Section 6</div>
-  <h2>Defence Q&amp;A — 面试最可能被问到的8个问题</h2>
-
-  <p>以下是面试官最可能追问的问题和推荐回答框架。
-  <strong>重要原则：先承认局限，再说缓解措施。</strong>不要试图"完美辩护"，而是展示你真的理解自己做了什么。</p>
-
-  <div style="display:flex;flex-direction:column;gap:16px;margin-top:20px;">
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q1</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">为什么最终变成了 Ensemble，而不是单一 Paper 策略？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>Paper 的核心框架（PCA + EVT + GPD）是基础，但单一实现在 crypto 的小截面上信号噪声较大。
-        Ensemble 是一个 portfolio construction 决策：将同一 EVT 框架的两种经济含义不同的表达（防守型 vs 动量型）组合，
-        利用它们低相关性（~0.18）来提升稳定性。这不是在"拼凑效果好的东西"，而是在同一理论框架内做信号多样化。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q2</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">50/50 权重凭什么？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>坦诚说——50/50 是一个保守的工程选择，而非最优解。
-        它避免了引入额外的权重优化参数（否则会有更多调参空间和过拟合风险）。
-        在两个策略收益相关性低、方向互补的前提下，等权是 naive diversification 的合理起点。
-        下一步改进方向是引入基于滚动 Sharpe 或波动率的动态权重。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q3</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">只用10个币也敢做 PCA？截面这么小有意义吗？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>这是已知局限，我在第5节有明确说明。10个资产的截面确实偏小，
-        导致 PCA mode 分离不稳定，尤其第一个 mode 解释方差 >70%，后续 mode 区分度有限。
-        但即便如此，PCA 仍能做到的是：把整体市场风险（mode 1）从局部分化风险（mode 2+）中分离出来。
-        这个分离是有经济含义的，也是信号存在的基础。扩展到30–50个资产是明确的下一步。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q4</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">K=7 在10个资产里是不是太多了？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>合理质疑。K=7 是由 variance_target=0.80 机械选出的，
-        而非人工指定。实际上后几个 mode 解释方差极小（各约1–2%），信息含量有限，
-        在 GPD 拟合时往往因超阈值样本不足而 gamma_k=0，对信号贡献接近零。
-        可以理解为：K=7 是上界，实际有效 mode 数接近 2–3。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q5</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">q=0.90 会不会不够"极值"？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>EVT 里"极值门槛"的选择是 bias-variance tradeoff。
-        q=0.95 在 L=504 下每个 mode 约产生 25 个超阈值样本，GPD 估计开始不稳定；
-        q=0.90 约产生 50 个，处于 GPD 拟合的工程可行区间。
-        这个选择有理论依据（Hill estimator 的 consistency 要求超阈值样本 →∞ 但相对总样本 →0），
-        q=0.90 是在统计有效性和极值纯粹性之间的合理折中。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q6</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">这个策略到底是 Alpha，还是只是风险管理 Overlay？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>更接近 risk management overlay，而非传统意义上的 alpha 生成。
-        它的 CAGR 与 BTC 相近，并不提供显著的超额绝对收益；
-        它的价值在于将 Sharpe 从 0.54 提升至 1.11、将 MaxDD 从 −84% 压缩至 −33%。
-        这更像一个风险调整层，让相同收益水平下的风险暴露更可控。
-        对于关注风险调整收益的机构资金，这个定位有其价值。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q7</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">Benchmark CAGR 更高，为什么我要买这个策略？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>两个角度。第一：BTC CAGR 高，但 MaxDD −84%。
-        一次 −84% 的亏损需要 +525% 才能回本，而大多数投资者在下跌 −50% 时已经割肉。
-        能活到下一轮牛市，才能享受下一轮收益。
-        第二：策略的目标用户不是能承受 −84% 回撤的个人投机者，
-        而是需要控制尾部风险的机构资金——对他们而言，MaxDD 约束 &gt; 绝对收益最大化。
-      </div>
-    </div>
-
-    <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-      <div style="background:#EFF6FF;padding:12px 18px;border-bottom:1px solid #DBEAFE;">
-        <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:0.05em;">Q8</span>
-        <span style="font-size:14px;font-weight:600;color:#1E3A8A;margin-left:10px;">你的 OOS 真的足以说明策略稳健吗？</span>
-      </div>
-      <div style="padding:14px 18px;font-size:13.5px;color:#374151;line-height:1.7;">
-        <strong>推荐回答：</strong>不，不足以。
-        8年日频数据、10个资产，切分 70/30 之后 OOS 期只有约2.5年。
-        这个样本量不足以对稳健性做出强结论。
-        OOS 测试的作用是：提供初步证据说明信号不完全是样本内幻觉，Sharpe 降幅 3.6% 支持这一点。
-        但它不能替代更长历史数据、更多资产、或跨市场的稳健性验证。
-        这是这份研究的核心局限之一，我在第5节已主动说明。
-      </div>
-    </div>
-
-  </div>
-</div>
 
 <div style="text-align:center;padding:24px 0 8px;font-size:12px;color:#9CA3AF;">
   EVA Tail Risk Strategy — Output Results &nbsp;·&nbsp; SimicX Internship Deliverable 3 &nbsp;·&nbsp; 2026-03-26

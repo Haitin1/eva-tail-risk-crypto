@@ -22,6 +22,9 @@ node_modules/
 # Claude
 .claude/
 
+# Personal interview prep (not for sharing)
+interview_prep.html
+
 # Temp / drafts
 *.rtf
 march.txt
